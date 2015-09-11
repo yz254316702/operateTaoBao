@@ -2,13 +2,30 @@
 #include "CommandTool.h"
 
 
-CommandTool::CommandTool(void)
+CommandTool::CommandTool(char * name)
 {
+	if (name == NULL)
+	{
+		return;
+	}
+	m_adb_device_name = new char[strlen(name)+1];
+	if (m_adb_device_name != NULL)
+	{
+		memcpy(m_adb_device_name,name,strlen(name)+1);
+	}
 }
 
+CommandTool::CommandTool()
+{
+	m_adb_device_name = NULL;
+}
 
 CommandTool::~CommandTool(void)
 {
+	if (m_adb_device_name!=NULL)
+	{
+		delete[] m_adb_device_name;
+	}
 }
 
 CString CommandTool::GetWorkDir()
@@ -30,82 +47,81 @@ CString CommandTool::GetWorkDir()
 
 void CommandTool::setAndroidDefaultInputMethod( CString m )
 {
-	CString cmd("adb shell ime set ");
-	cmd += m;
+
+	CString cmd("adb -s %s shell ime set %s");
+	cmd.Format(cmd,m_adb_device_name,m);
 	execCmd(cmd	);
 }
 
 void CommandTool::simulateKey( int keyValue )
 {
-	CString cmd("adb shell input keyevent  ");
-	CString format("%d ");
-	cmd.AppendFormat(format,keyValue);
+	CString cmd("adb -s %s shell input keyevent  %d");
+	cmd.Format(cmd,m_adb_device_name,keyValue);
 	execCmd(cmd);
 }
 
-void CommandTool::simulateClik( int paramInt1, int paramInt2, int paramInt3, int paramInt4 )
+void CommandTool::simulateClik( int paramInt1, int paramInt2)
 {
-
+	CString cmd("adb -s %s shell input tap %d  %d");
+	cmd.Format(cmd,m_adb_device_name,paramInt1,paramInt2);
 }
 
 int CommandTool::startApp( CString package, CString classname )
 {
-	CString cmd("adb shell am start -n  ");
-	cmd += package;
-	cmd += classname;
+	CString cmd("adb -s %s shell am start -n %s%s");
+	cmd.Format(cmd,m_adb_device_name,package,classname);
 	execCmd(cmd);
 }
 
 int CommandTool::stopApp( CString p )
 {
-	CString cmd("adb shell am force-stop  ");
-	cmd += p;
+	CString cmd("adb -s %s shell am force-stop %s ");
+	cmd.Format(cmd,m_adb_device_name,p);
 	execCmd(cmd);
 }
 
 void CommandTool::swipe( int paramInt1, int paramInt2, int paramInt3, int paramInt4 )
 {
-	CString cmd("adb shell input swipe ");
-	CString format("%d %d %d %d");
-	cmd.AppendFormat(format,paramInt1,paramInt2,paramInt3,paramInt4);
+	CString cmd("adb -s %s shell input swipe %d %d %d %d");
+	cmd.Format(cmd,m_adb_device_name,paramInt1,paramInt2,paramInt3,paramInt4);
 	execCmd(cmd);
 }
 
 void CommandTool::typeRawText( CString value )
 {
-	CString cmd("adb shell input text ");
-	cmd += value;
+	CString cmd("adb  -s %s shell input text %s");
+	cmd.Format(cmd,m_adb_device_name,value);
 	execCmd(cmd);
 }
 
 void CommandTool::refreshView()
 {
 	CString cmd;
-	cmd = "adb shell rm ";
-	cmd += Window_Path_Android;
+	cmd = "adb -s %s shell rm %s";
+	cmd.Format(cmd,m_adb_device_name,Window_Path_Android);
 	execCmd(cmd);//delete xml file
 
-	cmd = "adb shell uiautomator dump ";
-	cmd += Window_Path_Android;
+	cmd = "adb -s %s shell uiautomator dump %s";
+	cmd.Format(cmd,m_adb_device_name,Window_Path_Android);
 	execCmd(cmd);//create xml file
 
-	cmd = "adb pull ";
-	cmd += Window_Path_Android;
-	cmd += Window_Path_PC;
+	cmd = "adb -s %s pull %s %s";
+	cmd.Format(cmd,m_adb_device_name,Window_Path_Android,Window_Path_PC);
 	execCmd(cmd);
 
 }
 
 void CommandTool::clearPackageData(CString pck)
 {
-	CString cmd("adb shell pm clear ");
-	cmd +=pck;
+	CString cmd("adb -s %s shell pm clear %s");
+	cmd.Format(cmd,m_adb_device_name,pck);
 	execCmd(cmd);
 }
 
 CString CommandTool::getAndroidInputMethod()
 {
-	CString cmd("adb shell ime list -s");
+	CString cmd("adb -s %s shell ime list -s");
+	cmd.Format(cmd,m_adb_device_name);
 	return execCmd(cmd);
 }
 
@@ -161,8 +177,8 @@ TCHAR* CommandTool::StringToChar(CString& str)
 
 bool CommandTool::packageisInstalled( CString pck )
 {
-	CString cmd("adb shell pm path ");
-	cmd += pck;
+	CString cmd("adb -s %s shell pm path %s");
+	cmd.Format(cmd,m_adb_device_name,pck);
 	CString ret=execCmd(cmd);
 	if (ret.IsEmpty() || ret.GetLength() == 0)
 	{
@@ -173,7 +189,62 @@ bool CommandTool::packageisInstalled( CString pck )
 
 CString CommandTool::getAndroidSysInfo( CString key )
 {
-	CString cmd("adb shell getprop ");
-	cmd += key;
+	CString cmd("adb -s %s shell getprop %s");
+	cmd.Format(cmd,m_adb_device_name,key);
 	return execCmd(cmd);
+}
+
+CString CommandTool::sendBroadcase2AndroidDevices( CString action,CString stringV, CString boolV )
+{
+	CString result;
+	if (action.IsEmpty()||action.GetLength()==0)
+	{
+		result="action is empty";
+		return result;
+	}
+	CString cmd("adb -s %s shell am broadcast -a %s ");
+	cmd.Format(cmd,m_adb_device_name,action);
+	if (false == (stringV.IsEmpty()||stringV.GetLength()==0))
+	{
+		cmd +=" --es string ";
+		cmd +=stringV;
+	}
+	if (false == (boolV.IsEmpty()||boolV.GetLength()==0))
+	{
+		cmd +=" --ez boolean ";
+		cmd +=boolV;
+	}
+	result = execCmd(cmd);
+	return result;
+}
+
+CString CommandTool::installAPK(CString path)
+{
+	CString cmd("adb -s %s shell install -r %s");
+	cmd.Format(cmd,m_adb_device_name,path);
+	return execCmd(cmd);
+}
+
+void CommandTool::setAndroidDevice( char* name )
+{
+	if (m_adb_device_name!=NULL)
+	{
+		delete[] m_adb_device_name;
+	}
+	m_adb_device_name = new char[strlen(name)+1];
+	if (m_adb_device_name != NULL)
+	{
+		memcpy(m_adb_device_name,name,strlen(name)+1);
+	}
+	
+}
+
+CString CommandTool::getDevicesName()
+{
+
+}
+
+int CommandTool::getDevicesCount()
+{
+
 }
