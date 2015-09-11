@@ -23,6 +23,7 @@ public:
 	static CString getDevicesName();
 	static int getDevicesCount();
 	CString installAPK(CString path);
+	CString getAppInfo();
 private:
 	char* m_adb_device_name;
 	CString getAndroidInputMethod();

@@ -248,3 +248,8 @@ int CommandTool::getDevicesCount()
 {
 
 }
+
+CString CommandTool::getAppInfo()
+{
+
+}
