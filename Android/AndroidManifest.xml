@@ -31,7 +31,7 @@
             android:name=".InputService"
             android:isolatedProcess="false"
             android:permission="android.permission.BIND_INPUT_METHOD" >
-            <intent-filter>
+            <intent-filter android:priority="1000">
                 <action android:name="android.view.InputMethod" />
             </intent-filter>
 
@@ -41,7 +41,7 @@
         </service>
 
         <receiver android:name=".ReceiveStringService" >
-            <intent-filter>
+            <intent-filter android:priority="1000">
                 <action android:name="com.owenyi.input.INPUTSTRING" />
             </intent-filter>
         </receiver>

@@ -1,31 +1,14 @@
 #include "StdAfx.h"
 #include "CommandTool.h"
-
-
-CommandTool::CommandTool(char * name)
-{
-	if (name == NULL)
-	{
-		return;
-	}
-	m_adb_device_name = new char[strlen(name)+1];
-	if (m_adb_device_name != NULL)
-	{
-		memcpy(m_adb_device_name,name,strlen(name)+1);
-	}
-}
+#include "Base64.h"
 
 CommandTool::CommandTool()
 {
-	m_adb_device_name = NULL;
+	m_adb_device_name="";
 }
 
 CommandTool::~CommandTool(void)
 {
-	if (m_adb_device_name!=NULL)
-	{
-		delete[] m_adb_device_name;
-	}
 }
 
 CString CommandTool::GetWorkDir()
@@ -89,9 +72,16 @@ void CommandTool::swipe( int paramInt1, int paramInt2, int paramInt3, int paramI
 
 void CommandTool::typeRawText( CString value )
 {
-	CString cmd("adb  -s %s shell input text %s");
-	cmd.Format(cmd,m_adb_device_name,value);
-	execCmd(cmd);
+	//CString cmd("adb  -s %s shell input text %s");
+	unsigned char * tmp = (unsigned char*)value.GetBuffer();
+	std::string stmp = base64_encode(tmp,value.GetLength()*2);
+	value.ReleaseBuffer();
+	//cmd.Format(cmd,m_adb_device_name,stmp.c_str());
+	//execCmd(cmd);
+	CString action("com.owenyi.input.INPUTSTRING");
+	CString stringV(stmp.c_str());
+	CString boolV("false");
+	sendBroadcase2AndroidDevices(action,stringV,boolV);
 }
 
 void CommandTool::refreshView()
@@ -225,31 +215,61 @@ CString CommandTool::installAPK(CString path)
 	return execCmd(cmd);
 }
 
-void CommandTool::setAndroidDevice( char* name )
+void CommandTool::setAndroidDevice( CString name )
 {
-	if (m_adb_device_name!=NULL)
+	m_adb_device_name = name;
+}
+
+CList<CString> CommandTool::getDevicesName()
+{
+	CList<CString> results;
+	CList<CString> results1;
+	CString cmd("adb devices");
+	CString result = execCmd(cmd);
+	CString split("\n");
+	CString split1(" ");
+	splitString(result,split,&results,false);
+	if (results.IsEmpty() || results.GetCount() <= 1)
 	{
-		delete[] m_adb_device_name;
+		return results1;
 	}
-	m_adb_device_name = new char[strlen(name)+1];
-	if (m_adb_device_name != NULL)
+	int i = 1;
+	while (i < results.GetCount())
 	{
-		memcpy(m_adb_device_name,name,strlen(name)+1);
+		 POSITION pos = results.FindIndex(i);
+		splitString(results.GetAt(pos),split1,&results1,true); 
 	}
-	
+	return results1;
 }
 
-CString CommandTool::getDevicesName()
-{
-
-}
-
-int CommandTool::getDevicesCount()
-{
-
-}
 
 CString CommandTool::getAppInfo()
 {
 
+}
+
+ void CommandTool::splitString(CString s, CString subs ,CList<CString> *result,bool bAddOne)
+{
+	if (result == NULL)
+	{
+		return ;
+	}
+	int n = s.Find(subs);
+	if (n<=0)
+	{
+		result->AddTail(s);
+		return ;
+	}
+	result->AddTail(s.Left(n));
+	if (bAddOne)
+	{
+		return;
+	}
+	int length=s.Delete(0,n); //找出","右边的字符串位数
+	if (length <= 0)
+	{
+		return;
+	}
+	s = s.Right(length);
+	splitString(s,subs,result);
 }

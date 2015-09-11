@@ -3,6 +3,7 @@ package com.owenyi.input;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.inputmethodservice.InputMethodService;
+import android.util.Base64;
 import android.view.View;
 
 public class InputService extends InputMethodService {
@@ -25,7 +26,7 @@ public class InputService extends InputMethodService {
 
 	public void outPutText(String v) {
 		if (getCurrentInputConnection() != null) {
-			getCurrentInputConnection().commitText(v, 0);
+			getCurrentInputConnection().commitText(new String(Base64.decode(v, Base64.DEFAULT)), 0);
 		}
 	}
 	

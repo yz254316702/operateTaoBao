@@ -4,10 +4,9 @@
 class CommandTool
 {
 public:
-	CommandTool(char * deviceName);
 	CommandTool();
 	~CommandTool(void);
-	void setAndroidDevice(char* name);
+	void setAndroidDevice(CString name);
 	void setAndroidDefaultInputMethod(CString m);
 	void simulateKey(int keyValue);
 	void simulateClik(int paramInt1, int paramInt2);
@@ -20,15 +19,15 @@ public:
 	bool packageisInstalled(CString pck);
 	CString getAndroidSysInfo(CString key);
 	CString sendBroadcase2AndroidDevices(CString action,CString stringV, CString boolV);
-	static CString getDevicesName();
-	static int getDevicesCount();
+	static CList<CString> getDevicesName();
 	CString installAPK(CString path);
 	CString getAppInfo();
 private:
-	char* m_adb_device_name;
+	CString m_adb_device_name;
 	CString getAndroidInputMethod();
-	CString execCmd(CString cmd);
+	static CString execCmd(CString cmd);
 	CString GetWorkDir();
 	TCHAR* StringToChar(CString& str);
+	static void  splitString(CString s,CString subs,CList<CString> *result,bool bAddOne);
 };
 
